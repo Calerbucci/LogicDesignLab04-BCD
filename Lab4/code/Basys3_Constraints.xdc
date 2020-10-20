@@ -109,16 +109,16 @@ set_property IOSTANDARD LVCMOS33 [get_ports {led[15]}]
 
 
 # Buttons
-# set_property PACKAGE_PIN U18 [get_ports btnC]
-#    set_property IOSTANDARD LVCMOS33 [get_ports btnC]
-# set_property PACKAGE_PIN T18 [get_ports btnU]
-#    set_property IOSTANDARD LVCMOS33 [get_ports btnU]
+ set_property PACKAGE_PIN U18 [get_ports rst]
+ set_property IOSTANDARD LVCMOS33 [get_ports rst]
+ set_property PACKAGE_PIN T18 [get_ports en]
+ set_property IOSTANDARD LVCMOS33 [get_ports en]
 # set_property PACKAGE_PIN W19 [get_ports btnL]
 #    set_property IOSTANDARD LVCMOS33 [get_ports btnL]
 # set_property PACKAGE_PIN T17 [get_ports btnR]
 #    set_property IOSTANDARD LVCMOS33 [get_ports btnR]
-# set_property PACKAGE_PIN U17 [get_ports btnD]
-#    set_property IOSTANDARD LVCMOS33 [get_ports btnD]
+ set_property PACKAGE_PIN U17 [get_ports dir]
+ set_property IOSTANDARD LVCMOS33 [get_ports dir]
 
 
 
@@ -307,12 +307,12 @@ set_property CFGBVS VCCO [current_design]
 
 #set_property PACKAGE_PIN V16 [get_ports speed]
 #set_property IOSTANDARD LVCMOS33 [get_ports speed]
-set_property PACKAGE_PIN V16 [get_ports dir]
-set_property IOSTANDARD LVCMOS33 [get_ports dir]
-set_property PACKAGE_PIN V17 [get_ports en]
-set_property IOSTANDARD LVCMOS33 [get_ports en]
-set_property PACKAGE_PIN W16 [get_ports rst]
-set_property IOSTANDARD LVCMOS33 [get_ports rst]
+#set_property PACKAGE_PIN V16 [get_ports dir]
+#set_property IOSTANDARD LVCMOS33 [get_ports dir]
+#set_property PACKAGE_PIN V17 [get_ports en]
+#set_property IOSTANDARD LVCMOS33 [get_ports en]
+#set_property PACKAGE_PIN W16 [get_ports rst]
+#set_property IOSTANDARD LVCMOS33 [get_ports rst]
 
 
 

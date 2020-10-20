@@ -6,7 +6,7 @@ output reg [6:0] DISPLAY
 );
 
 wire clk1;    
-    clock_divider #(.width(13)) clk_13(.clk(clk),.clk_div(clk1));    
+    clock_divider #(13) clk_13(.clk(clk),.clk_div(clk1));    
     
 reg [3:0] value;
 reg [1:0] digit,digit_next;

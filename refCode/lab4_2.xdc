@@ -108,12 +108,12 @@ set_property PACKAGE_PIN E19 [get_ports {min}]
 
 
 # Buttons
- set_property PACKAGE_PIN U18 [get_ports {reset}]
-    set_property IOSTANDARD LVCMOS33 [get_ports {reset}]
+ set_property PACKAGE_PIN U18 [get_ports {rst}]
+    set_property IOSTANDARD LVCMOS33 [get_ports {rst}]
 set_property PACKAGE_PIN T18 [get_ports {en}]
     set_property IOSTANDARD LVCMOS33 [get_ports {en}]
- set_property PACKAGE_PIN W19 [get_ports {record}]
-    set_property IOSTANDARD LVCMOS33 [get_ports {record}]
+# set_property PACKAGE_PIN W19 [get_ports {record}]
+#    set_property IOSTANDARD LVCMOS33 [get_ports {record}]
 # set_property PACKAGE_PIN T17 [get_ports {ones_digit}]
 #    set_property IOSTANDARD LVCMOS33 [get_ports {ones_digit}]
  set_property PACKAGE_PIN U17 [get_ports {dir}]

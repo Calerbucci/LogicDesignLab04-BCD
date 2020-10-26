@@ -47,7 +47,7 @@ always @* begin
             4'd7: DISPLAY = 7'b0001111;
             4'd8: DISPLAY = 7'b0000000;
             4'd9: DISPLAY = 7'b0000100;
-            4'd10: DISPLAY = 7'b1111110;
+            4'd11: DISPLAY = 7'b1111110;
             default: DISPLAY = 7'b1111111;
   endcase    
 end    
@@ -57,11 +57,50 @@ endmodule
 module BCD(in,out);
 input [15:0] in;
 output [15:0] out;
+reg[15:0] out_temp;
+reg[15:0] in_temp;
 
-assign out[15:12] = (in[15:12]/10 >0) ? 9 : in[15:12] % 10 ;
-assign out[11:8] = (in[11:8]/10 >0) ? 9 : in[11:8] % 10 ;
-assign out[7:4] = (in[7:4]/10 > 0) ? 9 : in[7:4] % 10 ;
-assign out[3:0] = (in[3:0]/10 > 0) ? 9 : in[3:0] % 10 ;
+assign out[15:12] = (in[15:12]/10 >0) ? 11 : in[15:12] % 10 ;
+assign out[11:8] = (in[11:8]/10 >0) ? 11 : in[11:8] % 10 ;
+assign out[7:4] = (in[7:4]/10 > 0) ? 11 : in[7:4] % 10 ;
+assign out[3:0] = (in[3:0]/10 > 0) ? 11 : in[3:0] % 10 ;
+
+//always@(*) begin
+//    if(in_temp[15:12]/10 >0) begin
+//         out_temp[15:12] = 9;
+//     end
+//    else begin
+//        out_temp[15:12] =  in_temp[15:12] % 10 ;
+//    end
+//    if(in_temp[11:8]/10 >0) begin
+//         out_temp[11:8] = 9;
+//     end
+//    else  begin
+//         out_temp[11:8] =  in_temp[11:8] % 10 ;
+//    end
+//    if(in_temp[7:4]/10 >0) begin
+//          out_temp[7:4] = 9;
+//    end
+//    else begin
+//          out_temp[7:4] =  in_temp[7:4] % 10 ;
+//     end
+//    if(in_temp[3:0]/10 >0) begin
+//        out_temp[3:0] = 9;
+//        end
+//    else begin
+//         out_temp[3:0] =  in_temp[3:0] % 10 ;
+//    end
+//    if(in_temp[15:12] == 11 || in_temp[11:8] ==11 || in_temp[7:4] ==11 ||in_temp[3:0] == 11) begin
+//         out_temp[15:12]=11;
+//         out_temp[11:8]=11;
+//         out_temp[7:4]=11;
+//         out_temp[3:0]=11; 
+//    end
+//end
+
+//assign out = out_temp;
+
+
 
 endmodule
 
@@ -124,20 +163,27 @@ input en;
 input rst;
 input clk;
 input record;
+input display_1;
+input display_2;
 output [3:0] DIGIT;
 output [6:0] DISPLAY;
-output display_1;
-output display_2;
-wire en_one, dir_one;
-wire  en_de, dir_de;
+
+wire en_one, dir_one, record_one;
+wire  en_de, dir_de, record_de;
 wire clk_25, clk_23;
-reg dir_state, en_state;
-reg dir_state_next, en_state_next;
-wire [15:0] BCD_in, BCD_out;
+reg dir_state, en_state, record_state;
+reg dir_state_next, en_state_next, record_state_next, next_flag;
+reg [15:0] BCD_in;
+wire[15:0] BCD_out;
 reg max_temp;
 reg min_temp;
 reg [7:0] value;
 reg [7:0] value2;
+wire [7:0] value_temp;
+wire [7:0] value2_temp;
+reg flag;
+reg [7:0] display1_val1=0,display1_val2=0; 
+reg [7:0] display2_val1=0,display2_val2=0; 
 // clock divider
 clock_divider #(.n(23)) clk25(.clk(clk),.clk_div(clk_25));
 clock_divider #(.n(23)) clk23(.clk(clk),.clk_div(clk_23));
@@ -159,30 +205,52 @@ always @(posedge en_one, posedge rst)begin
   end
 end
 
-always @(posedge dir_one, posedge rst)begin
-  if(rst)begin
-    dir_state_next = 1;
-  end
-  else begin
-    dir_state_next = ~dir_state;
-  end
-end
+//always @(posedge dir_one, posedge rst)begin
+//  if(rst)begin
+//    dir_state_next = 1;
+//  end
+//  else begin
+//    dir_state_next = ~dir_state;
+//  end
+//end
+
+//always @(posedge record_one, posedge rst)begin
+//  if(rst)begin
+//    record_state_next = 0;
+//  end
+//  else begin
+//    record_state_next = ~record_state;
+//  end
+//end
 
 // inital condition
+//always @(posedge clk_23, posedge rst) begin
+//    if (rst) begin
+//        en_state <= 1'b0;
+//        dir_state <= 1'b1;
+//    end 
+//    else begin
+//        en_state <= en_state_next;
+//        dir_state <= dir_state_next;
+//    end
+//end
+
 always @(posedge clk_23, posedge rst) begin
     if (rst) begin
         en_state <= 1'b0;
-        dir_state <= 1'b1;
+        record_state <= 1'b0;
+        flag <=1;
     end 
     else begin
         en_state <= en_state_next;
-        dir_state <= dir_state_next;
+        record_state <= record_state_next;
+        flag <= next_flag;
     end
 end
 
-
 // counter
 always @(posedge clk_25, posedge rst) begin
+    
     if (rst) begin
         value <= 0;
         value2<=0;
@@ -200,12 +268,35 @@ always @(posedge clk_25, posedge rst) begin
            end
            if((value2%10 == 0) && (value2/10 == 2)) begin
                 value <=0;
-                value2 <= value2;
-               
            end
+//           if(record_one) begin
+//                if(flag) begin
+//                    display1_val1 = value;
+//                    display1_val2 = value2;
+//                    flag = 0;
+//                end
+//                else if(flag == 0) begin
+//                     display2_val1 = value;
+//                     display2_val2 = value2;
+//                     flag = 1;
+//                end
+//           end
         end
     end
 end
+always @(posedge record_one) begin
+    next_flag=1;
+    if (flag) begin
+         display2_val1 <= value;
+         display2_val2 <= value2;
+         next_flag <= 0;
+      end
+     else if(flag == 0) begin
+             display1_val1 <= value;
+             display1_val2 <= value2;
+           
+       end
+  end
 
  // switch direction
 //always @(posedge clk_23, posedge rst) begin
@@ -219,18 +310,47 @@ end
 
 // display the error if display_1 and display_2 is on
 
-always@(*) begin
-    if(display_1 && display_2) begin
-        value = 10;
-        value2 =10;
-    end
-end
+//always@(*) begin
+//    if(display_1 && display_2) begin
+//        value = 10;
+//        value2 =10;
+//    end
+//end
 
 // BCD
-assign BCD_in[3:0] = value % 10;
-assign BCD_in[7:4] = value / 10;
-assign BCD_in[11:8] = value2 %10;
-assign BCD_in[15:12] = value2/10;
+//assign BCD_in[3:0] = (display_1)?display1_val1 %10: value % 10;
+//assign BCD_in[7:4] = (display_1)?display1_val1 /10: value / 10;
+//assign BCD_in[11:8] =(display_1)?display1_val2 %10: value2 %10;
+//assign BCD_in[15:12] = (display_1)?display1_val2 /10:value2/10;
+assign value_temp =value;
+assign value2_temp = value2;
+
+always@(*) begin
+    if(display_1 && display_2) begin
+        BCD_in[3:0] = 11;
+        BCD_in[7:4] = 11;
+        BCD_in[11:8] = 11;
+        BCD_in[15:12] =11;
+    end
+    else if(display_1) begin
+        BCD_in[3:0] = display1_val1 %10;
+        BCD_in[7:4] = display1_val1 /10;
+        BCD_in[11:8] = display1_val2 %10;
+        BCD_in[15:12] =display1_val2 /10;
+    end
+    else if(display_2) begin
+        BCD_in[3:0] = display2_val1 %10;
+        BCD_in[7:4] = display2_val1 /10;
+        BCD_in[11:8] = display2_val2 %10;
+        BCD_in[15:12] =display2_val2 /10;
+    end
+    else begin
+        BCD_in[3:0] = value_temp %10;
+        BCD_in[7:4] = value_temp /10;
+        BCD_in[11:8] = value2_temp %10;
+        BCD_in[15:12] =value2_temp /10;
+    end
+end
 
 BCD BCD_MODULE(.in(BCD_in),.out(BCD_out));
 

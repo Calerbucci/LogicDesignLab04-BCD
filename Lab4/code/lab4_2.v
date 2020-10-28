@@ -158,6 +158,33 @@ assign  clk_div = num[n-1];
      
 endmodule
 
+
+
+
+
+
+module clock_divider_1 (clk_div, clk);
+input clk;
+output clk_div;
+
+
+reg  [100:0] num;
+
+
+always @(posedge clk) begin  
+    num = num+1;
+    if(clk_div==1)begin
+        num = 0;
+    end
+end
+
+
+assign  clk_div = (num==10000000) ? 1 : 0;
+endmodule
+
+
+
+
 module lab4_2(clk,rst,en,record, display_1, display_2,DIGIT,DISPLAY);
 input en;
 input rst;
@@ -172,7 +199,8 @@ wire en_one, dir_one, record_one;
 wire  en_de, dir_de, record_de;
 wire clk_25, clk_23;
 reg dir_state, en_state, record_state;
-reg dir_state_next, en_state_next, record_state_next, next_flag;
+reg dir_state_next, en_state_next, record_state_next;
+reg [1:0]next_flag;
 reg [15:0] BCD_in;
 wire[15:0] BCD_out;
 reg max_temp;
@@ -181,11 +209,11 @@ reg [7:0] value;
 reg [7:0] value2;
 wire [7:0] value_temp;
 wire [7:0] value2_temp;
-reg flag;
+reg [1:0]flag;
 reg [7:0] display1_val1=0,display1_val2=0; 
 reg [7:0] display2_val1=0,display2_val2=0; 
 // clock divider
-clock_divider #(.n(23)) clk25(.clk(clk),.clk_div(clk_25));
+clock_divider_1  clk25(.clk(clk),.clk_div(clk_25));
 clock_divider #(.n(23)) clk23(.clk(clk),.clk_div(clk_23));
 //  debounce
 debounce en_debounce(.clk(clk),.pb(en),.pb_debounced(en_de));
@@ -259,16 +287,23 @@ always @(posedge clk_25, posedge rst) begin
         if (en_state==1'b0) 
             value <= value;
         else begin
-           if(value == 99) begin
-                value2 <= value2+1;
-                value <= 0;
-           end
-           else begin
-                value <= value +1;
-           end
-           if((value2%10 == 0) && (value2/10 == 2)) begin
+            if((value2%10 == 0) && (value2/10 == 2)) begin
                 value <=0;
-           end
+            end
+            else
+                if((value2%10 == 5) && (value == 99)) begin
+                    value2 <= value2+4;
+                end
+                else if(value == 99) begin
+                    value2 <= value2+1;
+                    value <= 0;
+                end
+                else begin
+                    value <= value +1;
+                end
+            end
+            
+           
 //           if(record_one) begin
 //                if(flag) begin
 //                    display1_val1 = value;
@@ -282,19 +317,18 @@ always @(posedge clk_25, posedge rst) begin
 //                end
 //           end
         end
-    end
+    
 end
 always @(posedge record_one) begin
-    next_flag=1;
-    if (flag) begin
+    if (flag==1) begin
          display2_val1 <= value;
          display2_val2 <= value2;
-         next_flag <= 0;
+         next_flag <= 2;
       end
      else if(flag == 0) begin
              display1_val1 <= value;
              display1_val2 <= value2;
-           
+             next_flag=1;
        end
   end
 
@@ -332,13 +366,13 @@ always@(*) begin
         BCD_in[11:8] = 11;
         BCD_in[15:12] =11;
     end
-    else if(display_1) begin
+    else if(display_1 && en_state == 0 ) begin
         BCD_in[3:0] = display1_val1 %10;
         BCD_in[7:4] = display1_val1 /10;
         BCD_in[11:8] = display1_val2 %10;
         BCD_in[15:12] =display1_val2 /10;
     end
-    else if(display_2) begin
+    else if(display_2 && en_state == 0) begin
         BCD_in[3:0] = display2_val1 %10;
         BCD_in[7:4] = display2_val1 /10;
         BCD_in[11:8] = display2_val2 %10;
